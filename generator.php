@@ -24,9 +24,28 @@ function WebklientArticleGenerator_add_settings_link($links)
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'WebklientArticleGenerator_add_settings_link');
 
 class ArticleGeneratorPlugin {
-    private $options;
 
     public function __construct() {
+        // Kontrola a nastavení paměťového limitu
+        $current_memory_limit = ini_get('memory_limit');
+        $desired_memory_limit = '256M';
+        $current_memory_limit_bytes = $this->convert_hr_to_bytes($current_memory_limit);
+        $desired_memory_limit_bytes = $this->convert_hr_to_bytes($desired_memory_limit);
+
+        if ($current_memory_limit_bytes < $desired_memory_limit_bytes) {
+            ini_set('memory_limit', $desired_memory_limit);
+        }
+
+        // Kontrola a nastavení limitu doby běhu
+        $current_execution_time = ini_get('max_execution_time');
+        $desired_execution_time = 300; // v sekundách
+
+        if ($current_execution_time < $desired_execution_time) {
+            set_time_limit($desired_execution_time);
+            ini_set('max_execution_time', $desired_execution_time);
+        }
+
+        // Nastavení akcí WordPressu
         add_action('admin_menu', array($this, 'add_plugin_page'));
         add_action('admin_init', array($this, 'page_init'));
         add_action('wp', array($this, 'schedule_cron_job'));
@@ -35,6 +54,17 @@ class ArticleGeneratorPlugin {
         add_action('admin_post_generate_article', array($this, 'handle_generate_article'));
         add_action('init', array($this, 'register_block'));
         add_action('rest_api_init', array($this, 'register_api_routes'));
+    }
+
+    private function convert_hr_to_bytes($value) {
+        $value = trim($value);
+        $last = strtolower($value[strlen($value) - 1]);
+        switch ($last) {
+            case 'g': $value *= 1024;
+            case 'm': $value *= 1024;
+            case 'k': $value *= 1024;
+        }
+        return $value;
     }
 
     public function add_plugin_page() {
