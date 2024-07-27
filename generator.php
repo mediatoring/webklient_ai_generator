@@ -1,10 +1,14 @@
 <?php
 /*
-Plugin Name: Generátor AI článků a obrázků 
-Description: Tento plugin generuje články pomocí OpenAI a Dall-E API. Klíče vložte v sekci Nastavení > Generátor článků.
-Version: 1.5.1
-Author: Webklient.cz
+* Plugin Name:       Generátor AI článků a obrázků 
+* Plugin URI:        https://www.kubicek.ai/wp-ai-generator/
+* Description:       Tento WordPress plugin generuje články a obrázky pomocí OpenAI GPT-4 a DALL-E API. Plugin umožňuje automatické nebo manuální generování článků na základě specifikovaných kategorií a témat.
+* Version:           1.0
+* Author:            Webklient.cz & Kubicek.ai
+* Author URI:        https://www.webklient.cz
+* Text Domain:       wpturbo
 */
+
 
 if (!defined('ABSPATH')) {
     exit; // Pokud tento soubor není volán přímo z WordPress, ukonči.
