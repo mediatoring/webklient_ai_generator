@@ -6,7 +6,7 @@
 * Version:           1.0
 * Author:            Webklient.cz & Kubicek.ai
 * Author URI:        https://www.webklient.cz
-* Text Domain:       wpturbo
+* Text Domain:       WP-AI-article-generator-main
 */
 
 
@@ -290,7 +290,7 @@ class ArticleGeneratorPlugin {
         );
 
         $messages = array();
-        $messages[] = array("role" => "user", "content" => "Napiš kratší (tři až pět odstavců) unikátní článek jako zkušený novinář s nadpisem na libovolné téma z kategorie ".$category.". Cílovou čtenářskou skupinou jsou ".$target_audience.". Zaměření webu je ".$website_focus.". Nadpis dej do tagu <h1></h1>. Článek začni perexem, kde shrneš téma. V článku napiš nějaký zajímavý a překvapivý fakt. Uprostřed článku dej jeden mezititulek v HTML tagu <h2></h2>. Neopakuj slova, nepoužívej seznamy a odrážky. Na konec článku přidej prompt pro obrázek: 'Vygeneruj fotorealistický obrázek na téma: [téma článku] ve formátu 3:2 na šířku.'.");
+        $messages[] = array("role" => "user", "content" => "Napiš delší (šest až devět odstavců) unikátní článek jako zkušený novinář s nadpisem na libovolné téma z kategorie ".$category.". Nadpis my měl začínat velkým písmenem, další slova ale nepiš velkými písměny, pokud se nejedná o název. Text bude v češtině. Cílovou čtenářskou skupinou jsou ".$target_audience.". Zaměření webu je ".$website_focus.". Nadpis dej do tagu <h1></h1>. Článek začni perexem, kde shrneš téma. V článku napiš nějaký zajímavý a překvapivý fakt. Do článku dej dva až tři mezititulky v HTML tagu <h2></h2>. Neopakuj slova, nepoužívej seznamy a odrážky, trpný rod a poslední odstaven nepiš ve stylu Závěrem.... Na konec článku přidej prompt pro obrázek: 'Vygeneruj skutečně fotorealistický obrázek na téma: [téma článku].'.");
 
         $data = array();
         $data["model"] = "gpt-4o-mini";
