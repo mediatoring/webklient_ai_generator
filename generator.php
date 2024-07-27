@@ -56,16 +56,30 @@ class ArticleGeneratorPlugin {
         add_action('rest_api_init', array($this, 'register_api_routes'));
     }
 
-    private function convert_hr_to_bytes($value) {
-        $value = trim($value);
-        $last = strtolower($value[strlen($value) - 1]);
-        switch ($last) {
-            case 'g': $value *= 1024;
-            case 'm': $value *= 1024;
-            case 'k': $value *= 1024;
-        }
-        return $value;
+  private function convert_hr_to_bytes($value) {
+    $value = trim($value);
+    $last = strtolower($value[strlen($value) - 1]);
+    $num_value = substr($value, 0, -1); // Odebrání posledního znaku
+
+    if (!is_numeric($num_value)) {
+        error_log("Nenumerická hodnota při konverzi na byty: " . $value);
+        return 0; // Nebo jiná vhodná hodnota
     }
+
+    $num_value = floatval($num_value);
+
+    switch ($last) {
+        case 'g':
+            $num_value *= 1024;
+        case 'm':
+            $num_value *= 1024;
+        case 'k':
+            $num_value *= 1024;
+    }
+
+    return $num_value;
+}
+
 
     public function add_plugin_page() {
         add_options_page(
