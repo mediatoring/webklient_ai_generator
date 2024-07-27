@@ -2,7 +2,7 @@
 /*
 * Plugin Name:       Generátor AI článků a obrázků 
 * Plugin URI:        https://www.kubicek.ai/wp-ai-generator/
-* Description:       Tento WordPress plugin generuje články a obrázky pomocí OpenAI GPT-4 a DALL-E API. Plugin umožňuje automatické nebo manuální generování článků na základě specifikovaných kategorií a témat.
+* Description:       Tento WordPress plugin generuje články a obrázky pomocí OpenAI GPT-4o-mini a DALL-E API. Plugin umožňuje automatické nebo manuální generování článků na základě specifikovaných kategorií a témat.
 * Version:           1.0
 * Author:            Webklient.cz & Kubicek.ai
 * Author URI:        https://www.webklient.cz
@@ -293,9 +293,9 @@ class ArticleGeneratorPlugin {
         $messages[] = array("role" => "user", "content" => "Napiš kratší (tři až pět odstavců) unikátní článek jako zkušený novinář s nadpisem na libovolné téma z kategorie ".$category.". Cílovou čtenářskou skupinou jsou ".$target_audience.". Zaměření webu je ".$website_focus.". Nadpis dej do tagu <h1></h1>. Článek začni perexem, kde shrneš téma. V článku napiš nějaký zajímavý a překvapivý fakt. Uprostřed článku dej jeden mezititulek v HTML tagu <h2></h2>. Neopakuj slova, nepoužívej seznamy a odrážky. Na konec článku přidej prompt pro obrázek: 'Vygeneruj fotorealistický obrázek na téma: [téma článku] ve formátu 3:2 na šířku.'.");
 
         $data = array();
-        $data["model"] = "gpt-4";
+        $data["model"] = "gpt-4o-mini";
         $data["messages"] = $messages;
-        $data["max_tokens"] = 1500;
+        $data["max_tokens"] = 3000;
 
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, 1);
