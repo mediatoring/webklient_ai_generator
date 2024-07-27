@@ -327,7 +327,7 @@ class ArticleGeneratorPlugin {
                 $content = str_replace($matches[0], '', $content);
             }
 
-   if (preg_match('/(.*?)(Vygeneruj fotorealistický obrázek na téma: .*?\.)/s', $content, $matches)) {
+   if (preg_match('/(.*?)(Vygeneruj skutečně fotorealistický obrázek na téma: .*?\.)/s', $content, $matches)) {
                 $body = trim($matches[1]);
                 $image_prompt = trim($matches[2]);
             } else {
