@@ -58,7 +58,7 @@ After activating the plugin, you can configure the API keys and other settings:
 
 ## Použití / Usage ## 
 
-Manuální generování článků / Manual Article Generation
+## Manuální generování článků / Manual Article Generation
 
 **CZ:**
 Přejděte na Nastavení > Generátor článků.
@@ -69,15 +69,18 @@ Navigate to Settings > Article Generator.
 In the Manual Article Generation section, click the "Generate Articles" button.
 
 ## Automatické generování článků / Automatic Article Generation
+
 **CZ:** Plugin je nastaven pro automatické generování článků pomocí WP cronu každou hodinu. Ujistěte se, že váš WordPress cron je správně nastaven.
 
 **EN:** The plugin is set to automatically generate articles using WP cron every hour. Ensure your WordPress cron is properly set up.
 
 ## Generování článků na konkrétní téma / Generating Articles on a Specific Topic
+
 **CZ:**
-Přejděte na Nastavení > Generátor článků.
-V sekci Generování článku na konkrétní téma zadejte téma a klikněte na „Generovat článek na téma“.
+- Přejděte na Nastavení > Generátor článků.
+- V sekci Generování článku na konkrétní téma zadejte téma a klikněte na „Generovat článek na téma“.
+
 **EN:**
-Navigate to Settings > Article Generator.
-In the Generate Article on Specific Topic section, enter the topic and click "Generate Article on Topic."
+- Navigate to Settings > Article Generator.
+- In the Generate Article on Specific Topic section, enter the topic and click "Generate Article on Topic."
    
