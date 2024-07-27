@@ -290,7 +290,7 @@ class ArticleGeneratorPlugin {
         );
 
         $messages = array();
-        $messages[] = array("role" => "user", "content" => "Napiš delší (šest až devět odstavců) unikátní článek jako zkušený novinář s nadpisem na libovolné téma z kategorie ".$category.". Nadpis my měl začínat velkým písmenem, další slova ale nepiš velkými písměny, pokud se nejedná o název. Text bude v češtině. Cílovou čtenářskou skupinou jsou ".$target_audience.". Zaměření webu je ".$website_focus.". Nadpis dej do tagu <h1></h1>. Článek začni perexem, kde shrneš téma. V článku napiš nějaký zajímavý a překvapivý fakt. Do článku dej dva až tři mezititulky v HTML tagu <h2></h2>. Neopakuj slova, nepoužívej seznamy a odrážky, trpný rod a poslední odstaven nepiš ve stylu Závěrem.... Na konec článku přidej prompt pro obrázek: 'Vygeneruj skutečně fotorealistický obrázek na téma: [téma článku].'.");
+        $messages[] = array("role" => "user", "content" => "Napiš delší (šest až devět odstavců) unikátní článek jako zkušený novinář s nadpisem na libovolné téma z kategorie ".$category.". Nadpis my měl začínat velkým písmenem, další slova ale nepiš velkými písměny, pokud se nejedná o název. Titulek bude jedna věta, žádné dvojtečky. Text bude v češtině. Cílovou čtenářskou skupinou jsou ".$target_audience.". Zaměření webu je ".$website_focus.". Nadpis dej do tagu <h1></h1>. Článek začni perexem, kde shrneš téma. V článku napiš nějaký zajímavý a překvapivý fakt. Do článku dej dva až tři mezititulky v HTML tagu <h2></h2>. Neopakuj slova, nepoužívej seznamy a odrážky, trpný rod a poslední odstaven nepiš ve stylu Závěrem.... Na konec článku přidej prompt pro obrázek: 'Vygeneruj skutečně fotorealistický obrázek na téma: [téma článku].'.");
 
         $data = array();
         $data["model"] = "gpt-4o-mini";
@@ -327,7 +327,7 @@ class ArticleGeneratorPlugin {
                 $content = str_replace($matches[0], '', $content);
             }
 
-   if (preg_match('/(.*?)(Vygeneruj fotorealistický obrázek na téma: .*? ve formátu 3:2 na šířku\.)/s', $content, $matches)) {
+   if (preg_match('/(.*?)(Vygeneruj fotorealistický obrázek na téma: .*?\.)/s', $content, $matches)) {
                 $body = trim($matches[1]);
                 $image_prompt = trim($matches[2]);
             } else {
