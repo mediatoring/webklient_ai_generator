@@ -6,7 +6,7 @@
 * Version:           1.1
 * Author:            Webklient.cz & Kubicek.ai
 * Author URI:        https://www.webklient.cz
-* Text Domain:       webklient_ai_generator-main
+* Text Domain:       webklient_ai_generator
 */
 
 if (!defined('ABSPATH')) {
@@ -51,6 +51,7 @@ class ArticleGeneratorPlugin {
         add_action('admin_bar_menu', array($this, 'add_toolbar_items'), 100);
         add_action('admin_post_generate_articles', array($this, 'generate_posts'));
         add_action('admin_post_generate_custom_article', array($this, 'generate_custom_article'));
+        add_action('admin_post_generate_article', array($this, 'handle_generate_article'));
     }
 
     private function convert_hr_to_bytes($value) {
@@ -371,7 +372,7 @@ class ArticleGeneratorPlugin {
 
     public function handle_generate_article() {
         $this->generate_posts();
-        wp_redirect(admin_url('edit.php'));
+        wp_redirect(admin_url('options-general.php?page=article-generator'));
         exit;
     }
 
@@ -444,7 +445,7 @@ class ArticleGeneratorPlugin {
                 error_log("Nepodařilo se vygenerovat článek na téma: " . $topic);
             }
         }
-        wp_redirect(admin_url('edit.php'));
+        wp_redirect(admin_url('options-general.php?page=article-generator'));
         exit;
     }
 
