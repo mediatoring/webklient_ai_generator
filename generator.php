@@ -2,11 +2,11 @@
 /*
 * Plugin Name:       Generátor AI článků a obrázků 
 * Plugin URI:        https://www.kubicek.ai/wp-ai-generator/
-* Description:       Tento WordPress plugin generuje články a obrázky pomocí OpenAI GPT-4o-mini a DALL-E API. Plugin umožňuje automatické nebo manuální generování článků na základě specifikovaných kategorií a témat.
+* Description:       Tento plugin generuje články a obrázky pomocí OpenAI GPT-4o-mini a DALL-E API. Plugin umožňuje automatické nebo manuální generování článků na základě specifikovaných kategorií a témat.
 * Version:           1.1
 * Author:            Webklient.cz & Kubicek.ai
 * Author URI:        https://www.webklient.cz
-* Text Domain:       WP-AI-article-generator-main
+* Text Domain:       Webklient-AI-article-generator-main
 */
 
 if (!defined('ABSPATH')) {
