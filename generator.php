@@ -3,7 +3,7 @@
 * Plugin Name:       Generátor AI článků a obrázků 
 * Plugin URI:        https://www.kubicek.ai/wp-ai-generator/
 * Description:       Tento WordPress plugin generuje články a obrázky pomocí OpenAI GPT-4o-mini a DALL-E API. Plugin umožňuje automatické nebo manuální generování článků na základě specifikovaných kategorií a témat.
-* Version:           1.1
+* Version:           1.0
 * Author:            Webklient.cz & Kubicek.ai
 * Author URI:        https://www.webklient.cz
 * Text Domain:       WP-AI-article-generator-main
@@ -49,7 +49,8 @@ class ArticleGeneratorPlugin {
         add_action('wp', array($this, 'schedule_cron_job'));
         add_action('article_gen_hook', array($this, 'generate_posts'));
         add_action('admin_bar_menu', array($this, 'add_toolbar_items'), 100);
-        add_action('admin_post_generate_article', array($this, 'handle_generate_article'));
+        add_action('admin_post_generate_articles', array($this, 'generate_posts'));
+        add_action('admin_post_generate_custom_article', array($this, 'generate_custom_article'));
     }
 
     private function convert_hr_to_bytes($value) {
@@ -215,6 +216,14 @@ class ArticleGeneratorPlugin {
             'article-generator', 
             'setting_section_id'
         );
+
+        add_settings_field(
+            'post_status', 
+            'Stav příspěvku', 
+            array($this, 'post_status_callback'), 
+            'article-generator', 
+            'setting_section_id'
+        );
     }
 
     public function sanitize($input) {
@@ -239,6 +248,8 @@ class ArticleGeneratorPlugin {
             $new_input['article_length'] = absint($input['article_length']);
         if(isset($input['cron_schedule']))
             $new_input['cron_schedule'] = sanitize_text_field($input['cron_schedule']);
+        if(isset($input['post_status']))
+            $new_input['post_status'] = sanitize_text_field($input['post_status']);
         return $new_input;
     }
 
@@ -330,6 +341,16 @@ class ArticleGeneratorPlugin {
         <?php
     }
 
+    public function post_status_callback() {
+        $status = isset($this->options['post_status']) ? $this->options['post_status'] : 'publish';
+        ?>
+        <select id="post_status" name="article_gen_options[post_status]">
+            <option value="publish" <?php selected($status, 'publish'); ?>>Publikovaný</option>
+            <option value="draft" <?php selected($status, 'draft'); ?>>Koncept</option>
+        </select>
+        <?php
+    }
+
     public function schedule_cron_job() {
         $cron_schedule = isset($this->options['cron_schedule']) ? $this->options['cron_schedule'] : 'hourly';
         if (!wp_next_scheduled('article_gen_hook')) {
@@ -368,6 +389,7 @@ class ArticleGeneratorPlugin {
         $image_generation = isset($options['image_generation']) && $options['image_generation'] === 'yes';
         $dalle_model = isset($options['dalle_model']) ? $options['dalle_model'] : 'dalle-2';
         $dalle_resolution = isset($options['dalle_resolution']) ? $options['dalle_resolution'] : '1024x1024';
+        $post_status = isset($options['post_status']) ? $options['post_status'] : 'publish';
 
         $ignore_categories_sql = '';
         if (!empty($ignore_categories)) {
@@ -389,9 +411,9 @@ class ArticleGeneratorPlugin {
 
         if ($result_kat && count($result_kat) > 0) {
             foreach ($result_kat as $row) {
-                $article = $this->generate_article($row['name'], $api_openai, $openai_org, $target_audience, $website_focus, $article_length);
+                $article = $this->generate_article($row['name'], $api_openai, $openai_org, $target_audience, $website_focus, $article_length, $image_generation);
                 if ($article) {
-                    $this->save_article($article, $row['term_id'], $api_openai, $openai_org, $image_generation, $dalle_model, $dalle_resolution);
+                    $this->save_article($article, $row['term_id'], $api_openai, $openai_org, $image_generation, $dalle_model, $dalle_resolution, $post_status);
                 } else {
                     error_log("Nepodařilo se vygenerovat článek pro kategorii: " . $row['name']);
                 }
@@ -413,10 +435,11 @@ class ArticleGeneratorPlugin {
             $image_generation = isset($options['image_generation']) && $options['image_generation'] === 'yes';
             $dalle_model = isset($options['dalle_model']) ? $options['dalle_model'] : 'dalle-2';
             $dalle_resolution = isset($options['dalle_resolution']) ? $options['dalle_resolution'] : '1024x1024';
+            $post_status = isset($options['post_status']) ? $options['post_status'] : 'publish';
 
-            $article = $this->generate_article($topic, $api_openai, $openai_org, $target_audience, $website_focus, $article_length);
+            $article = $this->generate_article($topic, $api_openai, $openai_org, $target_audience, $website_focus, $article_length, $image_generation);
             if ($article) {
-                $this->save_article($article, 1, $api_openai, $openai_org, $image_generation, $dalle_model, $dalle_resolution); // Použijeme ID 1 jako výchozí kategorii
+                $this->save_article($article, 1, $api_openai, $openai_org, $image_generation, $dalle_model, $dalle_resolution, $post_status); // Použijeme ID 1 jako výchozí kategorii
             } else {
                 error_log("Nepodařilo se vygenerovat článek na téma: " . $topic);
             }
@@ -425,7 +448,7 @@ class ArticleGeneratorPlugin {
         exit;
     }
 
-    private function generate_article($category, $api_key, $organization, $target_audience, $website_focus, $article_length) {
+    private function generate_article($category, $api_key, $organization, $target_audience, $website_focus, $article_length, $image_generation) {
         $url = 'https://api.openai.com/v1/chat/completions';
         $headers = array(
             "Authorization: Bearer {$api_key}",
@@ -433,13 +456,19 @@ class ArticleGeneratorPlugin {
             "Content-Type: application/json"
         );
 
-        $messages = array();
-        $messages[] = array("role" => "user", "content" => "Napiš delší (šest až devět odstavců) unikátní článek jako zkušený novinář s nadpisem na libovolné téma z kategorie ".$category.". Nadpis my měl být jedna věta, žádné dvojtečky. Text článku bude v češtině. Cílovou čtenářskou skupinou jsou ".$target_audience.". Zaměření webu je ".$website_focus.". Nadpis dej do tagu <h1></h1>. Článek začni perexem, kde shrneš téma. V článku napiš nějaký zajímavý a překvapivý fakt. Do článku dej dva až tři mezititulky v HTML tagu <h2></h2>. Neopakuj slova, nepoužívej seznamy a odrážky, trpný rod a poslední odstaven nepiš ve stylu Závěrem.... Na konec článku přidej prompt pro obrázek: 'Vygeneruj skutečně fotorealistický obrázek na téma: [téma článku].'.");
+        $content_prompt = "Napiš delší (šest až devět odstavců) unikátní článek jako zkušený novinář s nadpisem na libovolné téma z kategorie " . $category . ". Nadpis my měl být jedna věta, žádné dvojtečky. Text článku bude v češtině. Cílovou čtenářskou skupinou jsou " . $target_audience . ". Zaměření webu je " . $website_focus . ". Nadpis dej do tagu <h1></h1>. Článek začni perexem, kde shrneš téma. V článku napiš nějaký zajímavý a překvapivý fakt. Do článku dej dva až tři mezititulky v HTML tagu <h2></h2>. Neopakuj slova, nepoužívej seznamy a odrážky, trpný rod a poslední odstaven nepiš ve stylu Závěrem....";
 
-        $data = array();
-        $data["model"] = "gpt-4o-mini";
-        $data["messages"] = $messages;
-        $data["max_tokens"] = $article_length;
+        if ($image_generation) {
+            $content_prompt .= " Na konec článku přidej prompt pro obrázek: 'Vygeneruj skutečně fotorealistický obrázek na téma: [téma článku].'";
+        }
+
+        $messages = array(array("role" => "user", "content" => $content_prompt));
+
+        $data = array(
+            "model" => "gpt-4o-mini",
+            "messages" => $messages,
+            "max_tokens" => $article_length
+        );
 
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, 1);
@@ -471,7 +500,7 @@ class ArticleGeneratorPlugin {
                 $content = str_replace($matches[0], '', $content);
             }
 
-            if (preg_match('/(.*?)(Vygeneruj skutečně fotorealistický obrázek na téma: .*?\.)/s', $content, $matches)) {
+            if ($image_generation && preg_match('/(.*?)(Vygeneruj skutečně fotorealistický obrázek na téma: .*?\.)/s', $content, $matches)) {
                 $body = trim($matches[1]);
                 $image_prompt = trim($matches[2]);
             } else {
@@ -492,7 +521,7 @@ class ArticleGeneratorPlugin {
         }
     }
 
-    private function save_article($article, $category_id, $api_key, $organization, $image_generation, $dalle_model, $dalle_resolution) {
+    private function save_article($article, $category_id, $api_key, $organization, $image_generation, $dalle_model, $dalle_resolution, $post_status) {
         $title = $article['title'];
         $body = $article['body'];
         $tags = $article['tags'];
@@ -501,7 +530,7 @@ class ArticleGeneratorPlugin {
         $post_data = array(
             'post_title'    => $title,
             'post_content'  => $body,
-            'post_status'   => 'publish',
+            'post_status'   => $post_status,
             'post_author'   => 1,
         );
 
