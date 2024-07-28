@@ -1,6 +1,4 @@
-# WP-AI-article-generator
-
-# Generátor AI článků a obrázků / AI Article and Image Generator
+# Generátor AI článků a obrázků pro WordPress / AI Article and Image Generator for WordPress
 
 ## Popis / Description
 
