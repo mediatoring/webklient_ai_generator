@@ -6,7 +6,7 @@
 * Version:           1.1
 * Author:            Webklient.cz & Kubicek.ai
 * Author URI:        https://www.webklient.cz
-* Text Domain:       webklient_ai_generator
+* Text Domain:       webklient_ai_generator-main
 */
 
 if (!defined('ABSPATH')) {
