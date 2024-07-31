@@ -3,7 +3,7 @@
  * Plugin Name: Generátor AI článků a obrázků
  * Plugin URI: https://www.kubicek.ai/wp-ai-generator/
  * Description: Tento plugin generuje články a obrázky pomocí OpenAI GPT-4o-mini a DALL-E API. Plugin umožňuje automatické nebo manuální generování článků na základě specifikovaných kategorií a témat.
- * Version: 1.1
+ * Version: 1.1.1
  * Author: Webklient.cz & Kubicek.ai
  * Author URI: https://www.webklient.cz
  * Text Domain: webklient_ai_generator-main
@@ -452,7 +452,7 @@ class ArticleGeneratorPlugin {
 				$this->save_article( $article, 1, $api_openai, $openai_org, $image_generation, $dalle_model, $dalle_resolution, $post_status );
 				// Použijeme ID 1 jako výchozí kategorii
 			} else {
-				error_log( "Nepodařilo se vygenerovat článek na téma: " . $topic );
+				error_log( "Failed to generate an article on: " . $topic );
 			}
 		}
 		wp_redirect( admin_url( 'options-general.php?page=article-generator' ) );
@@ -466,7 +466,7 @@ class ArticleGeneratorPlugin {
 	private function generate_article( $category, $api_key, $organization, $target_audience, $website_focus, $article_length, $image_generation ) {
 		$options         = get_option( 'article_gen_options' );
 		$generation_role = isset( $options['generation_role'] ) ? $options['generation_role'] : 'author';
-		$role_text       = $generation_role === 'experienced_reporter' ?'an experienced reporter' : 'an author';
+		$role_text       = $generation_role === 'experienced_reporter' ?'a proffesional journalist' : 'an experienced reviewer';
 
 		$url     = 'https://api.openai.com/v1/chat/completions';
 		$headers = array(
@@ -477,7 +477,7 @@ class ArticleGeneratorPlugin {
 
 		$language = isset( $options['language_selection'] ) ? $options['language_selection'] : 'en';
 
-		$content_prompt = 'Write a '.$article_length.' tokens long unique article as ' . $role_text . ' with a headline on any topic from the category ' . $category . '. The headline should be one sentence, no colons. The article text will be in ' . $language . '. The target audience is ' . $target_audience . '. The website\'s focus is ' . $website_focus . '. Put the headline in an <h1> tag. Start the article with a lead summarizing the topic. Include an interesting and surprising fact in the article. Add two to three subheadings in HTML <h2> tags. Avoid repeating words, passive voice, and do not write the last paragraph in the style of \'In conclusion....\'';
+		$content_prompt = 'Write a '.$article_length.' tokens long unique article as ' . $role_text . ' with a headline on any topic from the category ' . $category . '. The headline should be one sentence, no colons. The article text must be in ' . $language . ' language. The target audience is ' . $target_audience . '. The website\'s focus is ' . $website_focus . '. Put the headline in an <h1> tag. Start the article with a lead summarizing the topic. Include an interesting and surprising fact in the article. Add two to three subheadings in HTML <h2> tags. Avoid repeating words, passive voice, and do not write the last paragraph in the style of \'In conclusion....\'';
 
 		if ( $image_generation ) {
 			$content_prompt .= ' At the end of the article, add a prompt for an image: \'Generate a truly photorealistic image on the topic: [article topic].\'';
