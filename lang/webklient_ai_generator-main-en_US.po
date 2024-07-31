@@ -1,0 +1,113 @@
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Article Generator"
+msgstr "Article Generator"
+
+msgid "Manual Article Generation"
+msgstr "Manual Article Generation"
+
+msgid "Generate Articles"
+msgstr "Generate Articles"
+
+msgid "Generate Article on Specific Topic"
+msgstr "Generate Article on Specific Topic"
+
+msgid "Article Topic:"
+msgstr "Article Topic:"
+
+msgid "Generate Article on Topic"
+msgstr "Generate Article on Topic"
+
+msgid "API Settings"
+msgstr "API Settings"
+
+msgid "OpenAI API Key"
+msgstr "OpenAI API Key"
+
+msgid "OpenAI Organization"
+msgstr "OpenAI Organization"
+
+msgid "Ignore Categories (IDs separated by commas)"
+msgstr "Ignore Categories (IDs separated by commas)"
+
+msgid "Target Audience"
+msgstr "Target Audience"
+
+msgid "Website Focus"
+msgstr "Website Focus"
+
+msgid "Enable Image Generation"
+msgstr "Enable Image Generation"
+
+msgid "DALL-E Model"
+msgstr "DALL-E Model"
+
+msgid "DALL-E Resolution"
+msgstr "DALL-E Resolution"
+
+msgid "Article Length in Tokens"
+msgstr "Article Length in Tokens"
+
+msgid "Cron Schedule"
+msgstr "Cron Schedule"
+
+msgid "Post Status"
+msgstr "Post Status"
+
+msgid "Published"
+msgstr "Published"
+
+msgid "Draft"
+msgstr "Draft"
+
+msgid "Czech"
+msgstr "Czech"
+
+msgid "English"
+msgstr "English"
+
+msgid "Author"
+msgstr "Author"
+
+msgid "Experienced Reporter"
+msgstr "Experienced Reporter"
+
+msgid "Failed to generate article for category:"
+msgstr "Failed to generate article for category:"
+
+msgid "There are no categories in WordPress."
+msgstr "There are no categories in WordPress."
+
+msgid "Failed to generate article on topic:"
+msgstr "Failed to generate article on topic:"
+
+msgid "Article"
+msgstr "Article"
+
+msgid "successfully inserted with ID:"
+msgstr "successfully inserted with ID:"
+
+msgid "Image successfully uploaded:"
+msgstr "Image successfully uploaded:"
+
+msgid "Failed to download image."
+msgstr "Failed to download image."
+
+msgid "Failed to generate image."
+msgstr "Failed to generate image."
+
+msgid "Error creating post."
+msgstr "Error creating post."
+
+msgid "Hourly"
+msgstr "Hourly"
+
+msgid "Daily"
+msgstr "Daily"
+
+msgid "For support mail: "
+msgstr "For support mail: "
+
+msgid "Blogger"
+msgstr "Blogger"

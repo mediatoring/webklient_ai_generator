@@ -1,0 +1,114 @@
+msgid "Settings"
+msgstr "Nastavení"
+
+msgid "Article Generator"
+msgstr "Generátor článků"
+
+msgid "Manual Article Generation"
+msgstr "Manuální generování článků"
+
+msgid "Generate Articles"
+msgstr "Generovat články"
+
+msgid "Generate Article on Specific Topic"
+msgstr "Generování článku na konkrétní téma"
+
+msgid "Article Topic:"
+msgstr "Téma článku:"
+
+msgid "Generate Article on Topic"
+msgstr "Generovat článek na téma"
+
+msgid "API Settings"
+msgstr "Nastavení API"
+
+msgid "OpenAI API Key"
+msgstr "OpenAI API klíč"
+
+msgid "OpenAI Organization"
+msgstr "Organizace OpenAI"
+
+msgid "Ignore Categories (IDs separated by commas)"
+msgstr "Ignorovat kategorie (ID oddělená čárkami)"
+
+msgid "Target Audience"
+msgstr "Cílová skupina čtenářů"
+
+msgid "Website Focus"
+msgstr "Zaměření webu"
+
+msgid "Enable Image Generation"
+msgstr "Povolit generování obrázků"
+
+msgid "DALL-E Model"
+msgstr "DALL-E Model"
+
+msgid "DALL-E Resolution"
+msgstr "DALL-E Rozlišení"
+
+msgid "Article Length in Tokens"
+msgstr "Délka článku v tokenech"
+
+msgid "Cron Schedule"
+msgstr "Cron plán"
+
+msgid "Post Status"
+msgstr "Stav příspěvku"
+
+msgid "Published"
+msgstr "Publikovaný"
+
+msgid "Draft"
+msgstr "Koncept"
+
+msgid "Czech"
+msgstr "Čeština"
+
+msgid "English"
+msgstr "Angličtina"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "Experienced Reporter"
+msgstr "Zkušený reportér"
+
+msgid "Failed to generate article for category:"
+msgstr "Nepodařilo se vygenerovat článek pro kategorii:"
+
+msgid "There are no categories in WordPress."
+msgstr "Ve WordPressu nejsou žádné kategorie."
+
+msgid "Failed to generate article on topic:"
+msgstr "Nepodařilo se vygenerovat článek na téma:"
+
+msgid "Article"
+msgstr "Článek"
+
+msgid "successfully inserted with ID:"
+msgstr "byl úspěšně vložen s ID:"
+
+msgid "Image successfully uploaded:"
+msgstr "Obrázek úspěšně nahrán:"
+
+msgid "Failed to download image."
+msgstr "Nepodařilo se stáhnout obrázek."
+
+msgid "Failed to generate image."
+msgstr "Nepodařilo se vygenerovat obrázek."
+
+msgid "Error creating post."
+msgstr "Při vytváření příspěvku došlo k chybě."
+
+msgid "Hourly"
+msgstr "Každou hodinu"
+
+msgid "Daily"
+msgstr "Každý den"
+
+msgid "For support mail: "
+msgstr "Pro podporu napište e-mail na: "
+
+msgid "Blogger"
+msgstr "Bloger"
+
