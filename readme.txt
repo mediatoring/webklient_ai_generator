@@ -4,7 +4,7 @@ Donate link: https://www.kubicek.ai/wp-ai-generator/
 Tags: AI, GPT-4, DALL-E, article generator, image generator
 Requires at least: 5.0
 Tested up to: 6.0
-Stable tag: 1.1
+Stable tag: 1.1.1
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
