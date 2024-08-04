@@ -24,13 +24,13 @@
 
 **CZ:**
 1. Stáhněte plugin z repozitáře nebo použijte git k naklonování repozitáře do složky `wp-content/plugins`:
-   git clone https://github.com/mediatoring/WP-AI-article-generator.git
+   git clone https://github.com/mediatoring/webklient_ai_generator
 2. Aktivujte plugin prostřednictvím WordPress administrace.
 3. Přejděte do Nastavení > Generátor článků a zadejte své API klíče pro OpenAI.
 
 **EN:**
 1. Download the plugin from the repository or use git to clone the repository into the wp-content/plugins directory:
-git clone https://github.com/mediatoring/WP-AI-article-generator.git
+git clone https://github.com/mediatoring/webklient_ai_generator
 2. Activate the plugin through the WordPress admin dashboard.
 3. Go to Settings > Article Generator and enter your OpenAI API keys.
 
