@@ -13,6 +13,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Pokud tento soubor není volán přímo z WordPress, ukonči.
 }
 
+register_activation_hook(__FILE__, 'aktivovat_generator_clanku');
+
+function aktivovat_generator_clanku() {
+    // Výchozí nastavení
+    $vychozi_nastaveni = array(
+        'cron_schedule' => 'daily',
+        'article_length' => 2000,
+        'language_selection' => 'cs',
+        'post_status' => 'draft'
+    );
+    
+    add_option('article_gen_options', $vychozi_nastaveni);
+    
+    // Naplánovat první CRON úlohu
+    if (!wp_next_scheduled('article_gen_hook')) {
+        wp_schedule_event(time(), 'daily', 'article_gen_hook');
+    }
+}
+
 function WebklientArticleGenerator_add_settings_link( $links ) {
 	$settings_link = '<a href="' . admin_url( 'options-general.php?page=article-generator' ) . '">' . __( 'Settings', 'webklient_ai_generator-main' ) . '</a>';
 	array_unshift( $links, $settings_link );
@@ -50,17 +69,44 @@ class ArticleGeneratorPlugin {
 			set_time_limit( $desired_execution_time );
 			ini_set( 'max_execution_time', $desired_execution_time );
 		}
+		
+		$this->options = get_option('article_gen_options', array()); // Tato řádka chybí
+		$cron_schedule = isset($this->options['cron_schedule']) ? $this->options['cron_schedule'] : 'daily';
+	    if (!wp_next_scheduled('article_gen_hook')) {
+    	    wp_schedule_event(time(), $cron_schedule, 'article_gen_hook');
+    	}
 
 		// Nastavení akcí WordPressu
 		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
 		add_action( 'admin_init', array( $this, 'page_init' ) );
-		add_action( 'wp', array( $this, 'schedule_cron_job' ) );
+		//add_action( 'wp', array( $this, 'schedule_cron_job' ) );
 		add_action( 'article_gen_hook', array( $this, 'generate_posts' ) );
 		add_action( 'admin_bar_menu', array( $this, 'add_toolbar_items' ), 100 );
 		add_action( 'admin_post_generate_articles', array( $this, 'generate_posts' ) );
 		add_action( 'admin_post_generate_custom_article', array( $this, 'generate_custom_article' ) );
 		add_action( 'admin_post_generate_article', array( $this, 'handle_generate_article' ) );
-	}
+		
+       add_action('update_option_article_gen_options', array($this, 'update_cron_schedule'));
+    }
+
+    public function update_cron_schedule() {
+        // Získání aktuálních možností
+        $this->options = get_option('article_gen_options');
+
+        // Získání plánování úloh z aktuálních možností
+        $cron_schedule = isset($this->options['cron_schedule']) ? $this->options['cron_schedule'] : 'daily';
+
+        // Zrušení předchozího naplánovaného úkolu
+        $timestamp = wp_next_scheduled('article_gen_hook');
+        if ($timestamp) {
+            wp_unschedule_event($timestamp, 'article_gen_hook');
+        }
+
+        // Naplánování nového úkolu
+        if (!wp_next_scheduled('article_gen_hook')) {
+            wp_schedule_event(time(), $cron_schedule, 'article_gen_hook');
+        }
+    }
 
 	private function convert_hr_to_bytes( $value ) {
 		$value     = trim( $value );
@@ -127,7 +173,7 @@ class ArticleGeneratorPlugin {
 
         </div>
         <div class="wrap">
-            <p><?php echo __( "For support mail: ", 'webklient_ai_generator-main' ) . "support@webklient.com"; ?></p>
+            <p><?php echo __( "For support mail: ", 'webklient_ai_generator-main' ) . "podpora@webklient.cz"; ?></p>
         </div>
 		<?php
 	}
@@ -139,6 +185,8 @@ class ArticleGeneratorPlugin {
 			$this,
 			'print_section_info'
 		), 'article-generator' );
+		
+		
 
 		add_settings_field( 'openai_api_key', __( 'OpenAI API Key', 'webklient_ai_generator-main' ), array(
 			$this,
@@ -168,6 +216,16 @@ class ArticleGeneratorPlugin {
 			$this,
 			'dalle_model_callback'
 		), 'article-generator', 'setting_section_id' );
+		
+		add_settings_field( 
+    'image_style', 
+    __( 'Image Style', 'webklient_ai_generator-main' ), 
+    array( $this, 'image_style_callback' ), 
+    'article-generator', 
+    'setting_section_id' 
+);
+
+		
 		add_settings_field( 'dalle_resolution', __( 'DALL-E Resolution', 'webklient_ai_generator-main' ), array(
 			$this,
 			'dalle_resolution_callback'
@@ -212,10 +270,16 @@ class ArticleGeneratorPlugin {
 		echo '</select>';
 	}
 
+	
 	public function generation_role_callback() {
-		$roles         = [
-			'author'               => __( 'Author', 'webklient_ai_generator-main' ),
-			'experienced_reporter' => __( 'Experienced Reporter', 'webklient_ai_generator-main' ),
+    $roles = [
+        'author' => __('General Author', 'webklient_ai_generator-main'),
+        'experienced_reporter' => __('Experienced Reporter', 'webklient_ai_generator-main'),
+        'expert_analyst' => __('Expert Analyst', 'webklient_ai_generator-main'),
+        'storyteller' => __('Creative Storyteller', 'webklient_ai_generator-main'),
+        'tech_writer' => __('Technical Writer', 'webklient_ai_generator-main'),
+        'seo_specialist' => __('SEO Content Specialist', 'webklient_ai_generator-main'),
+        'industry_expert' => __('Industry Expert', 'webklient_ai_generator-main')
 		];
 		$selected_role = isset( $this->options['generation_role'] ) ? $this->options['generation_role'] : 'author';
 		echo '<select id="generation_role" name="article_gen_options[generation_role]">';
@@ -255,6 +319,11 @@ class ArticleGeneratorPlugin {
 		}
 		if ( isset( $input['image_generation'] ) ) {
 			$new_input['image_generation'] = sanitize_text_field( $input['image_generation'] );
+			
+			if ( isset( $input['image_style'] ) ) {
+    $new_input['image_style'] = sanitize_textarea_field( $input['image_style'] );
+}
+
 		}
 		if ( isset( $input['dalle_model'] ) ) {
 			$new_input['dalle_model'] = sanitize_text_field( $input['dalle_model'] );
@@ -353,14 +422,21 @@ class ArticleGeneratorPlugin {
 	}
 
 	public function cron_schedule_callback() {
-		$schedule = isset( $this->options['cron_schedule'] ) ? $this->options['cron_schedule'] : 'hourly';
-		?>
-        <select id="cron_schedule" name="article_gen_options[cron_schedule]">
-            <option value="hourly" <?php selected( $schedule, 'hourly' ); ?>><?php _e( 'Hourly', 'webklient_ai_generator-main' ); ?></option>
-            <option value="daily" <?php selected( $schedule, 'daily' ); ?>><?php _e( 'Daily', 'webklient_ai_generator-main' ); ?></option>
-        </select>
-		<?php
-	}
+    $schedule = isset( $this->options['cron_schedule'] ) ? $this->options['cron_schedule'] : 'daily';
+    ?>
+    <select id="cron_schedule" name="article_gen_options[cron_schedule]">
+        <option value="daily" <?php selected( $schedule, 'daily' ); ?>><?php _e( 'Daily', 'webklient_ai_generator-main' ); ?></option>
+        <option value="hourly" <?php selected( $schedule, 'hourly' ); ?>><?php _e( 'Hourly', 'webklient_ai_generator-main' ); ?></option>
+    </select>
+    <?php
+}
+	
+	public function image_style_callback() {
+    $image_style = isset( $this->options['image_style'] ) ? esc_textarea( $this->options['image_style'] ) : '';
+    echo '<textarea id="image_style" name="article_gen_options[image_style]" rows="5" cols="50" placeholder="' . esc_attr__( 'Define the image style...', 'webklient_ai_generator-main' ) . '">' . $image_style . '</textarea>';
+}
+
+	
 
 	public function post_status_callback() {
 		$status = isset( $this->options['post_status'] ) ? $this->options['post_status'] : 'publish';
@@ -373,7 +449,7 @@ class ArticleGeneratorPlugin {
 	}
 
 	public function schedule_cron_job() {
-		$cron_schedule = isset( $this->options['cron_schedule'] ) ? $this->options['cron_schedule'] : 'hourly';
+		$cron_schedule = isset( $this->options['cron_schedule'] ) ? $this->options['cron_schedule'] : 'daily';
 		if ( ! wp_next_scheduled( 'article_gen_hook' ) ) {
 			wp_schedule_event( time(), $cron_schedule, 'article_gen_hook' );
 		}
@@ -390,12 +466,33 @@ class ArticleGeneratorPlugin {
 		) );
 	}
 
-	public function handle_generate_article() {
-		$this->generate_posts();
-		if ( wp_redirect( admin_url( 'options-general.php?page=article-generator' ) ) ) {
-			exit;
-		}
-	}
+public function handle_generate_article() {
+    // Kontrola oprávnění
+    if (!current_user_can('manage_options')) {
+        wp_die(__('Nedostatečná oprávnění'));
+    }
+    
+    // Generování článku
+    $this->generate_posts();
+    
+    // Přidání admin notice pro zpětnou vazbu
+    add_settings_error(
+        'article_generator',
+        'article_generated',
+        __('Článek byl úspěšně vygenerován.', 'webklient_ai_generator-main'),
+        'success'
+    );
+    
+    // Správné přesměrování zpět na stránku nastavení s parametrem pro zobrazení zprávy
+    wp_safe_redirect(add_query_arg(
+        array(
+            'page' => 'article-generator',
+            'settings-updated' => 'true'
+        ),
+        admin_url('options-general.php')
+    ));
+    exit;
+}
 
 	public function generate_posts() {
 		global $wpdb;
@@ -463,88 +560,156 @@ class ArticleGeneratorPlugin {
 	are unchanged except for usage of __() for strings.
 	They can be included here similarly as required. */
 
-	private function generate_article( $category, $api_key, $organization, $target_audience, $website_focus, $article_length, $image_generation ) {
-		$options         = get_option( 'article_gen_options' );
-		$generation_role = isset( $options['generation_role'] ) ? $options['generation_role'] : 'author';
-		$role_text       = $generation_role === 'experienced_reporter' ?'a proffesional journalist' : 'an experienced reviewer';
+	private function generate_article($category, $api_key, $organization, $target_audience, $website_focus, $article_length, $image_generation) {
+    $options = get_option('article_gen_options');
+  
+   $generation_role = isset($options['generation_role']) ? $options['generation_role'] : 'author';
+    
+    // Mapování rolí
+    $role_mapping = [
+        'author' => ['cs' => 'obecný autor', 'en' => 'general author'],
+        'experienced_reporter' => ['cs' => 'zkušený novinář', 'en' => 'experienced journalist'],
+        'expert_analyst' => ['cs' => 'odborný analytik', 'en' => 'expert analyst'],
+        'storyteller' => ['cs' => 'kreativní vypravěč', 'en' => 'creative storyteller'],
+        'tech_writer' => ['cs' => 'technický autor', 'en' => 'technical writer'],
+        'seo_specialist' => ['cs' => 'SEO specialista', 'en' => 'SEO content specialist'],
+        'industry_expert' => ['cs' => 'expert v oboru', 'en' => 'industry expert']
+    ];
+    
+    $language = isset($options['language_selection']) ? $options['language_selection'] : 'cs';
+$role_text = $role_mapping[$generation_role][$language] ?? $role_mapping['author'][$language];
+		
+    $language = isset($options['language_selection']) ? $options['language_selection'] : 'cs';
+    
+    $url = 'https://api.openai.com/v1/chat/completions';
+    $headers = array(
+        "Authorization: Bearer {$api_key}",
+        "OpenAI-Organization: {$organization}",
+        "Content-Type: application/json"
+    );
 
-		$url     = 'https://api.openai.com/v1/chat/completions';
-		$headers = array(
-			"Authorization: Bearer {$api_key}",
-			"OpenAI-Organization: {$organization}",
-			"Content-Type: application/json"
-		);
+    // Nastavení promptu podle jazyka
+    if ($language === 'cs') {
+        $content_prompt = 'Napiš ' . $article_length . ' tokenů dlouhý unikátní článek jako 
+		' . $role_text . ' s titulkem na libovolné téma vhodné do kategorie ' . $category . '. ' .
+            'Titulek by měl být jedna věta, bez dvojteček, nebude začínat Jak.. ' .
+            'Text článku musí být česky. ' .
+            'Cílová skupina je ' . $target_audience . '. ' .
+            'Zaměření webové stránky je ' . $website_focus . '. ' .
+            'Vložte titulek do značky <h1>. ' .
+            'Článek začněte titulkem shrnujícím téma. ' .
+            'Zařaďte do článku zajímavou a překvapivou skutečnost. ' .
+            'Přidejte dva až tři podnadpisy ve značkách <h2> jazyka HTML. ' .
+            'Vyhněte se opakování slov, pasivnímu hlasu a nepište poslední odstavec ve stylu \'Na závěr....\'.';
+    } else {
+        $content_prompt = 'Write a unique  ' . $article_length . ' token article as
+		' . $role_text . ' with a headline fit to category ' . $category . '. ' .
+            'The headline should be a single sentence without colons. ' .
+            'Avoid starting title with How to ' .
+            'The article must be in English. ' .
+            'Target audience is ' . $target_audience . '. ' .
+            'Website focus is ' . $website_focus . '. ' .
+            'Put the title in <h1> tags. ' .
+            'Start the article with a title summarizing the topic. ' .
+            'Include an interesting and surprising fact. ' .
+            'Add two to three subheadings in HTML <h2> tags. ' .
+            'Avoid word repetition, passive voice, and don\'t write the last paragraph in a \'In conclusion...\' style.';
+    }
 
-		$language = isset( $options['language_selection'] ) ? $options['language_selection'] : 'en';
+    // Přidání promptu pro generování obrázku
+    if ($image_generation) {
+        if ($language === 'cs') {
+            $content_prompt .= ' Na konci článku přidej prompt pro obrázek: \'Vygeneruj obrázek na téma: [název článku].\'';
+        } else {
+            $content_prompt .= ' At the end of the article, add a prompt for an image: \'Generate an image on the topic: [article title].\'';
+        }
+    }
 
-		$content_prompt = 'Write a '.$article_length.' tokens long unique article as ' . $role_text . ' with a headline on any topic from the category ' . $category . '. The headline should be one sentence, no colons. The article text must be in ' . $language . ' language. The target audience is ' . $target_audience . '. The website\'s focus is ' . $website_focus . '. Put the headline in an <h1> tag. Start the article with a lead summarizing the topic. Include an interesting and surprising fact in the article. Add two to three subheadings in HTML <h2> tags. Avoid repeating words, passive voice, and do not write the last paragraph in the style of \'In conclusion....\'';
+    $messages = array(
+        array("role" => "user", "content" => $content_prompt)
+    );
+    
+    $data = array(
+        "model" => "gpt-4o-mini",
+        "messages" => $messages,
+        "max_tokens" => $article_length
+    );
 
-		if ( $image_generation ) {
-			$content_prompt .= ' At the end of the article, add a prompt for an image: \'Generate a truly photorealistic image on the topic: [article topic].\'';
-		}
+    $curl = curl_init($url);
+    curl_setopt($curl, CURLOPT_POST, 1);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 120);
+    $result = curl_exec($curl);
 
-		$messages = array(
-			array( "role" => "user", "content" => $content_prompt )
-		);
-		$data     = array(
-			"model"      => "gpt-4o-mini",
-			"messages"   => $messages,
-			"max_tokens" => $article_length
-		);
+    if (curl_errno($curl)) {
+        error_log(__('OpenAI API Error:', 'webklient_ai_generator-main') . ' ' . curl_error($curl));
+        return false;
+    } else {
+        $response_data = json_decode($result, true);
 
-		$curl = curl_init( $url );
-		curl_setopt( $curl, CURLOPT_POST, 1 );
-		curl_setopt( $curl, CURLOPT_POSTFIELDS, json_encode( $data ) );
-		curl_setopt( $curl, CURLOPT_HTTPHEADER, $headers );
-		curl_setopt( $curl, CURLOPT_RETURNTRANSFER, 1 );
-		curl_setopt( $curl, CURLOPT_TIMEOUT, 120 );
-		$result = curl_exec( $curl );
+        if (!isset($response_data['choices'][0]['message']['content'])) {
+            error_log(__('OpenAI API Unexpected Response:', 'webklient_ai_generator-main') . ' ' . print_r($response_data, true));
+            return false;
+        }
 
-		if ( curl_errno( $curl ) ) {
-			error_log( __( 'OpenAI API Error:', 'webklient_ai_generator-main' ) . ' ' . curl_error( $curl ) );
+        $content = $response_data['choices'][0]['message']['content'];
+        $title = '';
+        $body = '';
+        $tags = array();
+        $image_prompt = '';
 
-			return false;
-		} else {
-			$response_data = json_decode( $result, true );
+        if (preg_match('/<h1>(.*?)<\/h1>/', $content, $matches)) {
+            $title = $matches[1];
+            $content = str_replace($matches[0], '', $content);
+        }
 
-			if ( ! isset( $response_data['choices'][0]['message']['content'] ) ) {
-				error_log( __( 'OpenAI API Unexpected Response:', 'webklient_ai_generator-main' ) . ' ' . print_r( $response_data, true ) );
+    if ($image_generation) {
+    $search_pattern = $language === 'cs' 
+        ? '/(.*?)(Vygeneruj obrázek na téma: .*?\.)/s'
+        : '/(.*?)(Generate an image on the topic: .*?\.)/s';
+    
+    if (preg_match($search_pattern, $content, $matches)) {
+        $body = trim($matches[1]);
+        $base_image_prompt = trim($matches[2]);
+    } else {
+        $body = $content;
+        // Nastav fallback prompt, pokud regex nic nenajde
+        $base_image_prompt = $language === 'cs' 
+            ? 'Vygeneruj obrázek na téma: ' . $category . '.'
+            : 'Generate an image on the topic: ' . $category . '.';
+    }
+    
+    // Načti styl obrázku z administrace, pokud je nastaven
+    $image_style = isset($options['image_style']) && !empty($options['image_style']) 
+        ? trim($options['image_style']) 
+        : '';
 
-				return false;
-			}
+    // Sestavení výsledného promptu
+    $image_prompt = $base_image_prompt;
+    if (!empty($image_style)) {
+        $image_prompt .= ' ' . $image_style;
+    }
+} else {
+    $body = $content;
+}
 
-			$content      = $response_data['choices'][0]['message']['content'];
-			$title        = '';
-			$body         = '';
-			$tags         = array();
-			$image_prompt = '';
 
-			if ( preg_match( '/<h1>(.*?)<\/h1>/', $content, $matches ) ) {
-				$title   = $matches[1];
-				$content = str_replace( $matches[0], '', $content );
-			}
+        if (preg_match('/\[tags\](.*?)\[\/tags\]/', $content, $matches)) {
+            $tags = array_map('trim', explode(',', $matches[1]));
+        }
 
-			if ( $image_generation && preg_match( '/(.*?)(Generate a truly photorealistic image on the topic: .*?\.)/s', $content, $matches ) ) {
-				$body         = trim( $matches[1] );
-				$image_prompt = trim( $matches[2] );
-			} else {
-				$body = $content;
-			}
+        curl_close($curl);
 
-			if ( preg_match( '/\[tags\](.*?)\[\/tags\]/', $content, $matches ) ) {
-				$tags = array_map( 'trim', explode( ',', $matches[1] ) );
-			}
-
-			curl_close( $curl );
-
-			return array(
-				'title'        => $title,
-				'body'         => $body,
-				'tags'         => $tags,
-				'image_prompt' => $image_prompt
-			);
-		}
-	}
+        return array(
+            'title' => $title,
+            'body' => $body,
+            'tags' => $tags,
+            'image_prompt' => $image_prompt
+        );
+    }
+}
 
 	private function save_article( $article, $category_id, $api_key, $organization, $image_generation, $dalle_model, $dalle_resolution, $post_status ) {
 		$title        = $article['title'];
@@ -608,33 +773,57 @@ class ArticleGeneratorPlugin {
 		}
 	}
 
-	private function generate_image( $prompt, $api_key, $organization, $dalle_model, $dalle_resolution ) {
-		$url     = 'https://api.openai.com/v1/images/generations';
-		$headers = array(
-			"Authorization: Bearer {$api_key}",
-			"OpenAI-Organization: {$organization}",
-			"Content-Type: application/json"
-		);
-		$model   = $dalle_model;
-		$size    = $dalle_resolution;
-		$quality = 'standard';
-		$params  = [ 'prompt' => $prompt, 'size' => $size, 'n' => 1, 'model' => $model, 'quality' => $quality ];
-		try {
-			$result = can_call_to_external( $url, implode( "\n", $headers ), implode( "\n", $params ) );
-		} catch ( Exception $e ) {
-			error_log( '\\n`' . time() . '`\\n' . __CLASS__ . "[::]" . __METHOD__ . " [::]" . __FILE__ . '{Exception Name\} ' . ' [error]: ' . (string) $e->getMessage() );
+private function generate_image($prompt, $api_key, $organization, $dalle_model, $dalle_resolution) {
+    $url = 'https://api.openai.com/v1/images/generations';
+    $headers = array(
+        "Authorization: Bearer {$api_key}",
+        "OpenAI-Organization: {$organization}",
+        "Content-Type: application/json"
+    );
 
-			return;
-		}
-		if ( ! $result ) {
-			error_log( sprintf( '\\nGenerating Image  (%s) failed\n' . __METHOD__ ) );
+    $data = array(
+        'prompt' => $prompt,
+        'size' => $dalle_resolution,
+        'n' => 1,
+        'model' => 'dall-e-3',
 
-			return;
-		}
+        'quality' => 'standard'
+    );
 
-		return $result['data'][0]['url'];
-	}
+    try {
+        $curl = curl_init($url);
+        curl_setopt_array($curl, array(
+            CURLOPT_POST => 1,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 120,
+            CURLOPT_SSL_VERIFYPEER => true
+        ));
 
+        $response = curl_exec($curl);
+        
+        if (curl_errno($curl)) {
+            error_log(__('DALL-E API Error:', 'webklient_ai_generator-main') . ' ' . curl_error($curl));
+            curl_close($curl);
+            return false;
+        }
+        
+        curl_close($curl);
+        $result = json_decode($response, true);
+
+        if (isset($result['data'][0]['url'])) {
+            return $result['data'][0]['url'];
+        }
+
+        error_log(__('Invalid DALL-E API response:', 'webklient_ai_generator-main') . ' ' . print_r($result, true));
+        return false;
+
+    } catch (Exception $e) {
+        error_log(__('Exception in image generation:', 'webklient_ai_generator-main') . ' ' . $e->getMessage());
+        return false;
+    }
+}
 	private function download_image( $url ) {
 		$ch = curl_init( $url );
 		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
@@ -661,13 +850,19 @@ if ( is_admin() ) {
 	add_action( 'admin_post_generate_custom_article', array( $article_gen_plugin, 'generate_custom_article' ) );
 }
 
-// spuštění generování článků pomocí WP cronu
-if ( ! wp_next_scheduled( 'article_gen_hook' ) ) {
-	wp_schedule_event( time(), isset( $article_gen_plugin->options['cron_schedule'] ) ? $article_gen_plugin->options['cron_schedule'] : "hourly", 'article_gen_hook' );
-}
-add_action( 'article_gen_hook', 'generate_posts' );
+
 
 function generate_posts() {
 	$article_gen_plugin = new ArticleGeneratorPlugin();
 	$article_gen_plugin->generate_posts();
+}
+
+// Přidat novou funkci
+register_deactivation_hook(__FILE__, 'deactivate_article_generator');
+
+function deactivate_article_generator() {
+    $timestamp = wp_next_scheduled('article_gen_hook');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'article_gen_hook');
+    }
 }
